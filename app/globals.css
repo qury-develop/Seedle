@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f3f7f1;
+  --foreground: #1d2820;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    Inter, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo,
+    system-ui, sans-serif;
+  margin: 0;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: #cbe7d0;
+  color: #173820;
+}
+
+.field {
+  min-height: 2.75rem;
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid #cbd7cb;
+  background: #fbfcf8;
+  padding: 0.7rem 0.8rem;
+  color: #26362d;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.field:focus {
+  border-color: #2f6f4e;
+  box-shadow: 0 0 0 3px rgba(47, 111, 78, 0.12);
+}
