@@ -1,10 +1,12 @@
 /** Cloudflare Worker entry point for the vinext-starter template. */
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
+import { handleApi } from "../server/api";
+import type { AppEnv } from "../server/env";
+import { secured } from "../server/security";
 
-interface Env {
-  ASSETS: Fetcher;
-  DB: D1Database;
+interface Env extends AppEnv {
+  ASSETS: { fetch(request: Request): Promise<Response> };
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {
@@ -28,6 +30,7 @@ interface ExecutionContext {
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/api/")) return handleApi(request, env);
 
     if (url.pathname === "/_vinext/image") {
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];
@@ -40,7 +43,14 @@ const worker = {
       }, allowedWidths);
     }
 
-    return handler.fetch(request, env, ctx);
+    return secured(await handler.fetch(request, env, ctx), request);
+  },
+  async scheduled(_controller: unknown, env: Env) {
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM rate_limits WHERE expires_at < ?").bind(Date.now()),
+      env.DB.prepare("DELETE FROM auth_session WHERE expires_at < ?").bind(Date.now()),
+      env.DB.prepare("DELETE FROM auth_verification WHERE expires_at < ?").bind(Date.now()),
+    ]);
   },
 };
 
